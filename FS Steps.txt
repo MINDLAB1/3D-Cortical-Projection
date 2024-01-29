@@ -1,0 +1,135 @@
+ From SPM images (add later)
+reference image is the template image, source image is the brain data that will move onto reference
+
+cd ~/Downloads
+
+python3 fslinstaller.py
+
+
+ ycg.yan@gmail.com
+
+
+mri_convert (just put the file in the home area)
+
+
+tkregister2 --s surfanatomical --mov rReslice_Combined_roi_meanRD.nii \ --regheader --reg  register.dat --surf orig
+
+
+tkregister2 --s surfanatomical --mov rReslice_Combined_roi_meanRD.nii \ --regheader --reg  register.dat --surf orig
+
+
+tkregister2 --s bert --mov updated.nii --regheader --reg register.dat --surf orig
+
+tkregister2 --s home --mov updated.img --regheader --reg register.dat --surf orig
+
+tkregister2 --s surfanatomical --mov rReslice_Combined_roi_meanRD.nii --regheader --reg register.dat 
+
+
+tkregister2 --mov updated.nii --s bert \ --regheader --reg register.dat --surf
+
+bbregister \ --s bert \ --mov updated.img \ --bold \ --init-fsl \ --reg register.dat 
+
+bbregister --mov updated.img --bold --s bert --init-fsl --reg register.dat
+
+ERROR: you must specify a contrast.
+ use --bold, --dti, --t2, or --t1,
+
+bbregister --mov rReslice_Combined_roi_meanRD.nii --bold \ --s fsaverage \ --init-rr --lta register.lta
+
+tkregister2 --s bert --mov rReslice_Combined_roi_meanRD.nii --regheader --reg register.dat --surf orig
+
+
+bbregister --mov rReslice_Combined_roi_meanRD.nii --bold \ --s bert \ --init-rr --lta register.lta
+
+bbregister --mov rReslice_Combined_roi_meanRD.nii --bold \ --s orig.mgz \ --init-rr --lta register.lta
+
+tkmedit bert orig.mgz -overlay rReslice_Combined_roi_meanRD.nii -overlay-reg register.dat
+
+tksurferfv bert lh inflated -overlay  rReslice_Combined_roi_meanRD.nii -overlay-reg register.dat
+
+tksurferfv bert lh inflated -overlay updated.img -overlay-reg register.dat
+
+
+check: tkregisterfv --mov rReslice_Combined_roi_meanRD.nii --reg register.lta --surfs  --sd /usr/local/freesurfer/7.2.0/subjects
+
+
+tkregisterfv --mov rReslice_Combined_roi_meanRD.nii --reg register.dat --surfs  --sd /usr/local/home
+
+mri_vol2surf --mov rReslice_Combined_roi_meanRD.nii --reg register.dat --hemi lh --projfrac 0.5 --o lh.sig.mgh
+
+mri_vol2surf --s fsaverage --mov rReslice_Combined_roi_meanRD.nii --regheader --reg register.dat --surf orig
+
+mri_vol2vol --mov rReslice_Combined_roi_meanRD.nii --reg register.dat --interp nearest --fstarg --o ces.anat.mgh
+
+mri_segstats --seg $SUBJECTS_DIR/subject/mri/aseg.mgz --ctab $FREESURFER_HOME/FreeSurferColorLUT.txt --i ces.anat.mgh --sum ces.asag.stats
+
+
+freeview -v \
+brain.nii \
+brainmask.mgz \
+wm.mgz:visible=0 \
+-f good_output/surf/lh.white:edgecolor=blue \
+good_output/surf/rh.white:edgecolor=blue \
+good_output/surf/rh.pial:edgecolor=red \
+good_output/surf/lh.pial:edgecolor=red \
+good_output/surf/rh.inflated:visible=0 \
+good_output/surf/lh.inflated:visible=0 \
+-viewport cor -layout 1
+
+
+freeview -v SUBJECTS_DIR/bert/mri/orig.mgz \ rReslice_Combined_roi_meanRD.nii:reg=register.lta -f \ SUBJECTS_DIR/bert/surf/lh.white:edgecolor=green \ SUBJECTS_DIR/bert/surf/rh.white:edgecolor=green \-viewport coronal
+
+freeview -v /usr/local/home/rReslice_Combined_roi_meanRD.nii \ rReslice_Combined_roi_meanRD.nii:reg=register.lta -f \ SUBJECTS_DIR/fsaverage/surf/lh.white:edgecolor=green \ SUBJECTS_DIR/fsaverage/surf/rh.white:edgecolor=green \-viewport coronal
+
+mri_vol2surf --src rReslice_Combined_roi_meanRD.nii --out_type analyze --srcreg register.dat --hemi hemisphere --o ./sig-rh.nii --out_type analyze --float2int round --trgsubject ico --icoorder 7
+
+mri_vol2surf --src rReslice_Combined_roi_meanRD.nii --src_type analyze --srcreg register.dat --hemi rh --o ./sig-rh.img --out_type analyze --float2int round --trgsubject ico --icoorder 7
+
+mri_vol2surf --src rReslice_Combined_roi_meanRD.nii --out mean.nii --srcreg register.dat --hemi rh
+
+mri_vol2surf --src rReslice_Combined_roi_meanRD.nii --regheader MNI --projfrac 0.5 --hemi lh --out /usr/local/freesurfer/7.2.0/subjects/fsaverage
+
+mri_vol2surf --src rReslice_Combined_roi_meanRD.nii --out rReslice_Combined_roi_meanRD_surf.nii --hemi lhrh --out_type nii --regheader 
+
+mri_vol2surf --src rReslice_Combined_roi_meanRD.nii --out rReslice_Combined_roi_meanRD_surf.nii --hemi lhrh --out_type nii --regheader /usr/home/register.dat
+
+recon-all -s surfanatomical -i /home/developer/template/template_RW.nii -all 
+
+
+mri_vol2surf --src rReslice_Combined_roi_meanRD.nii --regheader /home/developer/template/template_RW.nii --projfrac 0.5 --hemi lhrh --out /home/developer/
+
+
+freeview -f $SUBJECTS_DIR/$subject/surf/lh.inflated:overlay=lesionMask_surf.mgh
+
+Bias mapping code - edit line 14 with volume file
+Find file aal MNI V4 for all the brain region numbers - if cannot find brain region in this atlas, use another atlas- raymond had to combine overlays from different atlases
+
+Look through all the text files to see if the brain regions I need are there! 
+
+Swap out Raymond's mean values with my frequency information
+
+May need to normalize data so the value is between 0 and 1 - try first with count number, then normalize it - convert from max and min
+
+
+line 84 combines all the regions - just add + sign to include more regions 
+disregard 97 to 104
+
+change lines 14, 20
+
+mri_vol2surf --src rReslice_Combined_roi_meanRD.nii --src_type nii --regheader mni152surfanatomical --hemi lhrh --projfrac-avg 0.5 --o ./template --out_type nii
+
+mri_vol2surf --src rReslice_Combined_roi_meanRD.nii --src_type nii --srcreg template_RW.nii --hemi lhrh --projfrac-avg 0.5 --out /home/developer/template/final.nii --out_type nii
+
+
+mri_vol2surf --mov rReslice_Combined_roi_meanRD.nii --mni152reg --trgsubject fsaverage --hemi lh --out final.nii --projfrac-max 0 1 .1
+
+mri_vol2surf --src rReslice_Combined_roi_meanRD.nii --out final.nii --mni152reg --trgsubject fsaverage --hemi lh
+
+
+
+How to fix it when ubuntu crashes: https://askubuntu.com/questions/1408595/kernel-panic-in-virtual-box-6-1-32
+
+
+mri_vol2surf --src rReslice_Combined_roi_meanRD.nii --src_type nii --regheader mni152surfanatomical --hemi lhrh --projfrac-avg 0.5 --o ./pls --out_type nii
+
+mri_vol2surf --src rReslice_Combined_roi_meanRD.nii --out lh.cope2.mgh \ --regheader mni152 --hemi lhrh --projfrac-avg 0.5

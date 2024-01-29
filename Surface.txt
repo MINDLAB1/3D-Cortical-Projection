@@ -1,0 +1,228 @@
+Instructions:
+- cd freesurfer
+- use this code:
+
+tksurferfv fsaverage lh.inflated:overlay=rReslice_Combined_roi_meanRD.nii
+
+tksurferfv fsaverage lh inflated -overlay rReslice_Combined_roi_meanRD.nii
+tksurferfv fsaverage lh pial -overlay rStrokeCovidWFU_roi_meanRD.nii
+
+tksurferfv fsaverage rh pial -overlay rCovidMicrobleedsWFU_roi_meanRD.nii & tksurferfv fsaverage lh pial -overlay rCovidMicrobleedsWFU_roi_meanRD.nii
+
+
+global covid
+
+%create ROI labels
+% copy header to write masks labels
+%load the single_subj_TI.nii in SPM/canonical
+FPm=spm_select('FPList',pwd,'^single_subj_T1.*\.nii$');
+[pth bnm ext] = spm_fileparts(FPm);
+V = spm_vol(FPm);
+singlesub= spm_read_vols(V);
+
+
+%Create a table of the average relative differences regional values
+%load the table
+
+% Load the WFU Pick atlas AAL 
+volume = spm_vol('C:\Users\16478\Desktop\wfu\wfu_pickatlas\MNI_atlas_templates\aal_MNI_V4.nii'); %check path
+[data xyz] = spm_read_vols(volume);
+R1 = double((data(:,:,:) == 73)); % Putamen left
+R2 = double((data(:,:,:) == 74)); % Putamen right
+R19 = double((data(:,:,:) == 60)); % ParietalIR
+R20 = double((data(:,:,:) == 62)); % ParietalSR
+R21 = double((data(:,:,:) == 82)); % TemporalSupR
+R22 = double((data(:,:,:) == 84)); % TemporalPoleSupR
+R23 = double((data(:,:,:) == 86)); % TemporalMidR
+R24 = double((data(:,:,:) == 88)); % TemporalPoleMid
+R25 = double((data(:,:,:) == 90)); % TemporalInfR
+R28 = double((data(:,:,:) == 77)); % ThalamusL
+
+volume1 = spm_vol('C:\Users\16478\Desktop\wfu\wfu_pickatlas\MNI_atlas_templates\TD_label.nii'); %check path
+[data xyz] = spm_read_vols(volume1);
+R3 = double((data(:,:,:) == 41)); % Thalamus
+R4 = double((data(:,:,:) == 36)); % Caudate
+R5 = double((data(:,:,:) == 42)); % Insula
+R6 = double((data(:,:,:) == 52)); % Cingulate
+
+
+volume2 = spm_vol('C:\Users\16478\Desktop\wfu\wfu_pickatlas\MNI_atlas_templates\TD_lobe.nii'); %check path
+[data xyz] = spm_read_vols(volume2);
+R7 = double((data(:,:,:) == 1)); % Cerebellum left
+R8 = double((data(:,:,:) == 8)); % Cerebellum right
+R9 = double((data(:,:,:) == 3)); % Temporal
+R10 = double((data(:,:,:) == 5)); % Frontal
+R11 = double((data(:,:,:) == 2)); % Midbrain
+R12 = double((data(:,:,:) == 7)); % Pons
+R13 = double((data(:,:,:) == 10)); % Medulla
+R14 = double((data(:,:,:) == 9)); % Occipital
+R18 = double((data(:,:,:) == 6)); % Sublobar
+R29 = double((data(:,:,:) == 12)); % Parietal
+
+volume3 = spm_vol('C:\Users\16478\Desktop\wfu\wfu_pickatlas\MNI_atlas_templates\TD_brodmann.nii'); %check path
+[data xyz] = spm_read_vols(volume3);
+R16 = double((data(:,:,:) == 118)); % Corpus 
+
+volume4 = spm_vol('C:\Users\16478\Desktop\wfu\wfu_pickatlas\MNI_atlas_templates\TD_type.nii'); %check path
+[data xyz] = spm_read_vols(volume4);
+R17 = double((data(:,:,:) == 2)); % Subcortical
+
+
+volume5 = spm_vol('C:\Users\16478\Desktop\wfu\wfu_pickatlas\MNI_atlas_templates\TD_hemisphere.nii'); %check path
+[data xyz] = spm_read_vols(volume5);
+R26 = double((data(:,:,:) == 5)); % CerebrumL
+R27 = double((data(:,:,:) == 6)); % CerebrumR
+
+%load ('~/NP_analysis/NP_pro/ROI/WFU_rois/ROI_pro.mat');
+
+Insula=double(R5);
+Insula(Insula==1)=0.01;
+
+Thalamus=double(R3);
+Thalamus(Thalamus==1)=0.11;
+
+Corpus=double(R16);
+Corpus(Corpus==1)=0.60;
+
+Temporal=double(R9);
+Temporal(Temporal==1)=0.03;
+
+
+Occipital=double(R14);
+Occipital(Occipital==1)=0.03;
+
+Parietal=double(R29);
+Parietal(Parietal==1)=0.10;
+
+
+ThalamusL=double(R26);
+ThalamusL(ThalamusL==1)=0.02;
+
+
+CerebrumL=double(R26);
+CerebrumL(CerebrumL==1)=0.15;
+
+
+CerebrumR=double(R27);
+CerebrumR(CerebrumR==1)=0.15;
+
+
+TemporalSupR=double(R21);
+TemporalSupR(TemporalSupR==1)=0.01;
+
+
+TemporalPoleSupR=double(R22);
+TemporalPoleSupR(TemporalPoleSupR==1)=0.01;
+
+TemporalMidR=double(R23);
+TemporalMidR(TemporalMidR==1)=0.01;
+
+TemporalPoleMid=double(R24);
+TemporalPoleMid(TemporalPoleMid==1)=0.01;
+
+TemporalInfR=double(R25);
+TemporalInfR(TemporalInfR==1)=0.01;
+
+ParietalIR=double(R19);
+ParietalIR(ParietalIR==1)=0.09;
+
+ParietalSR=double(R20);
+ParietalSR(ParietalSR==1)=0.09;
+
+
+Cerebellum=double(R7|R8);
+Cerebellum(Cerebellum==1)=0.40;
+
+
+Frontal=double(R10);
+Frontal(Frontal==1)=0.21;
+
+Subcortical=double(R16);
+Subcortical(Subcortical==1)=1.00;
+
+Pons=double(R12);
+Pons(Pons==1)=0.13;
+
+Sublobar=double(R18);
+Sublobar(Sublobar==1)=1.00;
+
+
+
+
+%label for all roi masks..good for displaying on T1 overlay.
+Global=double(Insula+Thalamus+Corpus+Temporal+Occipital+Parietal+ThalamusL+CerebrumL+CerebrumR+TemporalSupR+TemporalPoleSupR+TemporalMidR+TemporalPoleMid+TemporalInfR+ParietalIR+ParietalSR+Cerebellum+Frontal+Subcortical+Pons+Sublobar);
+%mask14_2=mask14.*wbmask;
+VO = V; % copy input info for output image
+VO.fname = fullfile(pth, ['WFU_roi_meanRD.nii']);
+VO.dt =[16,0];
+spm_write_vol(VO,Global);
+clear VO.fname VO
+
+%label for all roi masks..good for displaying on T1 overlay.
+Global=double(Insula+Thalamus+Corpus+Temporal+Occipital+Parietal+ThalamusL+CerebrumL+CerebrumR+TemporalSupR+TemporalPoleSupR+TemporalMidR+TemporalPoleMid+TemporalInfR+ParietalIR+ParietalSR+Cerebellum+Frontal+Subcortical+Pons+Sublobar);
+%mask14_2=mask14.*wbmask;
+VO = V; % copy input info for output image
+VO.fname = fullfile(pth, ['WFU_roi_meanRD.nii']);
+VO.dt =[16,0];
+spm_write_vol(VO,Global);
+clear VO.fname VO
+ 
+
+VO = V; % copy input info for output image
+VO.fname = fullfile(pth, ['WFU_roi_Cerebellum.nii']);
+VO.dt =[16,0];
+spm_write_vol(VO,Cerebellum);
+clear VO.fname 
+
+
+VO = V; % copy input info for output image
+VO.fname = fullfile(pth, ['WFU_roi_Frontal.nii']);
+VO.dt =[16,0];
+spm_write_vol(VO,Frontal);
+clear VO.fname 
+
+
+VO = V; % copy input info for output image
+VO.fname = fullfile(pth, ['WFU_roi_Parietal.nii']);
+VO.dt =[16,0];
+spm_write_vol(VO,ParietalIR);
+clear VO.fname 
+
+
+%MNI-Atlas Template
+%TD_label.nii
+%Thalamus = 41
+%Caduate = 36
+%Insula = 42
+%Cingulate = 52
+
+%TD_lobe.nii
+%Parietal = 12
+%Brainstem = 2,7, 10  (Midbrain, pons, medulla)
+%Cerebellum = 1, 8 
+%Temporal = 3
+%Occipital = 9
+%Parietal = 12
+%Frontal = 5
+%Sublobar = 6
+
+%aal_MIN_v4.nii
+%Putamen = 73, 74
+% ParietalIR = 60
+% ParietalSR = 62
+% TemporalSupR = 82
+% TemporalPoleSupR = 84
+% TemporalMidR = 86
+% TemporalPoleMid = 88
+% TemporalInfR = 90
+% ThalamusL = 77
+
+%TD_brodmann.nii
+%Corpus = 118
+
+%TD_type.nii
+%Subcortical = 2
+
+%TD_hemisphere.nii'
+%CerebrumL = 5
+%CerebrumR = 6

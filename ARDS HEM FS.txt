@@ -1,0 +1,282 @@
+%create ROI labels
+% copy header to write masks labels
+%load the single_subj_TI.nii in SPM/canonical
+FPm=spm_select('FPList',pwd,'^single_subj_T1.*\.nii$');
+[pth bnm ext] = spm_fileparts(FPm);
+V = spm_vol(FPm);
+singlesub= spm_read_vols(V);
+
+
+%Create a table of the average relative differences regional values
+%load the table
+
+% Load the WFU Pick atlas AAL 
+volume = spm_vol('C:\Users\16478\Desktop\wfu\wfu_pickatlas\MNI_atlas_templates\aal_MNI_V4.nii'); %check path
+[data xyz] = spm_read_vols(volume);
+R1 = double((data(:,:,:) == 73)); % Putamen left
+R2 = double((data(:,:,:) == 74)); % Putamen right
+
+
+volume1 = spm_vol('C:\Users\16478\Desktop\wfu\wfu_pickatlas\MNI_atlas_templates\TD_label.nii'); %check path
+[data xyz] = spm_read_vols(volume1);
+R3 = double((data(:,:,:) == 41)); % Thalamus
+R4 = double((data(:,:,:) == 36)); % Caudate
+R5 = double((data(:,:,:) == 42)); % Insula
+R6 = double((data(:,:,:) == 52)); % Cingulate
+
+
+volume2 = spm_vol('C:\Users\16478\Desktop\wfu\wfu_pickatlas\MNI_atlas_templates\TD_lobe.nii'); %check path
+[data xyz] = spm_read_vols(volume2);
+R7 = double((data(:,:,:) == 1)); % Cerebellum left
+R8 = double((data(:,:,:) == 8)); % Cerebellum right
+R9 = double((data(:,:,:) == 3)); % Temporal
+R10 = double((data(:,:,:) == 5)); % Frontal
+R11 = double((data(:,:,:) == 2)); % Midbrain
+R12 = double((data(:,:,:) == 7)); % Pons
+R13 = double((data(:,:,:) == 10)); % medulla
+R14 = double((data(:,:,:) == 9)); % Occipital
+R15 = double((data(:,:,:) == 12)); % Pariental
+R18 = double((data(:,:,:) == 6)); % Sublobar
+
+volume3 = spm_vol('C:\Users\16478\Desktop\wfu\wfu_pickatlas\MNI_atlas_templates\TD_brodmann.nii'); %check path
+[data xyz] = spm_read_vols(volume3);
+R16 = double((data(:,:,:) == 118)); % Corpus 
+
+volume4 = spm_vol('C:\Users\16478\Desktop\wfu\wfu_pickatlas\MNI_atlas_templates\TD_type.nii'); %check path
+[data xyz] = spm_read_vols(volume4);
+R17 = double((data(:,:,:) == 2)); % Subcortical
+
+
+%load ('~/NP_analysis/NP_pro/ROI/WFU_rois/ROI_pro.mat');
+
+
+Temporal=double(R9);
+Temporal(Temporal==1)=0.33;
+
+
+Frontal=double(R10);
+Frontal(Frontal==1)=1.00;
+
+
+Subcortical=double(R16);
+Subcortical(Subcortical==1)=0.33;
+
+
+Sublobar=double(R18);
+Sublobar(Sublobar==1)=0.33;
+
+
+%label for all roi masks..good for displaying on T1 overlay.
+Global=double(Temporal+Frontal+Subcortical+Sublobar);
+%mask14_2=mask14.*wbmask;
+VO = V; % copy input info for output image
+VO.fname = fullfile(pth, ['WFU_roi_meanRD.nii']);
+VO.dt =[16,0];
+spm_write_vol(VO,Global);
+clear VO.fname VO
+
+%label for all roi masks..good for displaying on T1 overlay.
+Global=double(Temporal+Frontal+Subcortical+Sublobar);
+%mask14_2=mask14.*wbmask;
+VO = V; % copy input info for output image
+VO.fname = fullfile(pth, ['WFU_roi_meanRD.nii']);
+VO.dt =[16,0];
+spm_write_vol(VO,Global);
+clear VO.fname VO
+
+
+
+VO = V; % copy input info for output image
+VO.fname = fullfile(pth, ['WFU_roi_Frontal.nii']);
+VO.dt =[16,0];
+spm_write_vol(VO,Frontal);
+clear VO.fname 
+
+VO = V; % copy input info for output image
+VO.fname = fullfile(pth, ['WFU_roi_Temporal.nii']);
+VO.dt =[16,0];
+spm_write_vol(VO,Temporal);
+clear VO.fname 
+
+
+VO = V; % copy input info for output image
+VO.fname = fullfile(pth, ['WFU_roi_Subcortical.nii']);
+VO.dt =[16,0];
+spm_write_vol(VO,Subcortical);
+clear VO.fname 
+
+
+VO = V; % copy input info for output image
+VO.fname = fullfile(pth, ['WFU_roi_Sublobar.nii']);
+VO.dt =[16,0];
+spm_write_vol(VO,Sublobar);
+clear VO.fname 
+
+
+%MNI-Atlas Template
+%TD_label.nii
+%Thalamus = 41
+%Caduate = 36
+%Insula = 42
+%Cingulate = 52
+
+%TD_lobe.nii
+%Brainstem = 2,7, 10  (Midbrain, pons, medulla)
+%Cerebellum = 1, 8 
+%Temporal = 3
+%Occipital = 9
+%Parietal = 12
+%Frontal = 5
+%Sublobar = 6
+
+%aal_MIN_v4.nii
+%Putamen = 73, 74
+
+%TD_brodmann.nii
+%Corpus = 118
+
+%TD_type.nii
+%Subcortical = 2
+
+
+From SPM images (add later)
+reference image is the template image, source image is the brain data that will move onto reference
+
+cd ~/Downloads
+
+python3 fslinstaller.py
+
+
+ ycg.yan@gmail.com
+
+
+mri_convert (just put the file in the home area)
+
+
+tkregister2 --s surfanatomical --mov rReslice_Combined_roi_meanRD.nii \ --regheader --reg  register.dat --surf orig
+
+
+tkregister2 --s surfanatomical --mov rReslice_Combined_roi_meanRD.nii \ --regheader --reg  register.dat --surf orig
+
+
+tkregister2 --s bert --mov updated.nii --regheader --reg register.dat --surf orig
+
+tkregister2 --s home --mov updated.img --regheader --reg register.dat --surf orig
+
+tkregister2 --s surfanatomical --mov rReslice_Combined_roi_meanRD.nii --regheader --reg register.dat 
+
+
+tkregister2 --mov updated.nii --s bert \ --regheader --reg register.dat --surf
+
+bbregister \ --s bert \ --mov updated.img \ --bold \ --init-fsl \ --reg register.dat 
+
+bbregister --mov rARDSHEMWFU_roi_meanRD.nii --bold --s fsaverage --init-fsl --reg register.dat
+
+ERROR: you must specify a contrast.
+ use --bold, --dti, --t2, or --t1,
+
+bbregister --mov rReslice_Combined_roi_meanRD.nii --bold \ --s fsaverage \ --init-rr --lta register.lta
+
+tkregister2 --s bert --mov rReslice_Combined_roi_meanRD.nii --regheader --reg register.dat --surf orig
+
+
+bbregister --mov rReslice_Combined_roi_meanRD.nii --bold \ --s bert \ --init-rr --lta register.lta
+
+bbregister --mov rReslice_Combined_roi_meanRD.nii --bold \ --s orig.mgz \ --init-rr --lta register.lta
+
+tkmedit bert orig.mgz -overlay rReslice_Combined_roi_meanRD.nii -overlay-reg register.dat
+
+tksurferfv bert lh inflated -overlay  rReslice_Combined_roi_meanRD.nii -overlay-reg register.dat
+
+tksurferfv bert lh inflated -overlay updated.img -overlay-reg register.dat
+
+
+check: tkregisterfv --mov rStrokeWFU_roi_meanRD.nii --reg register.dat --surfs  --sd /usr/local/freesurfer/7.2.0/subjects
+
+
+
+tkregisterfv --mov rReslice_Combined_roi_meanRD.nii --reg register.dat --surfs  --sd /usr/local/home
+
+mri_vol2surf --mov rReslice_Combined_roi_meanRD.nii --reg register.dat --hemi lh --projfrac 0.5 --o lh.sig.mgh
+
+mri_vol2surf --s fsaverage --mov rReslice_Combined_roi_meanRD.nii --regheader --reg register.dat --surf orig
+
+mri_vol2vol --mov rReslice_Combined_roi_meanRD.nii --reg register.dat --interp nearest --fstarg --o ces.anat.mgh
+
+mri_segstats --seg $SUBJECTS_DIR/subject/mri/aseg.mgz --ctab $FREESURFER_HOME/FreeSurferColorLUT.txt --i ces.anat.mgh --sum ces.asag.stats
+
+
+freeview -v \
+brain.nii \
+brainmask.mgz \
+wm.mgz:visible=0 \
+-f good_output/surf/lh.white:edgecolor=blue \
+good_output/surf/rh.white:edgecolor=blue \
+good_output/surf/rh.pial:edgecolor=red \
+good_output/surf/lh.pial:edgecolor=red \
+good_output/surf/rh.inflated:visible=0 \
+good_output/surf/lh.inflated:visible=0 \
+-viewport cor -layout 1
+
+
+freeview -v SUBJECTS_DIR/bert/mri/orig.mgz \ rReslice_Combined_roi_meanRD.nii:reg=register.lta -f \ SUBJECTS_DIR/bert/surf/lh.white:edgecolor=green \ SUBJECTS_DIR/bert/surf/rh.white:edgecolor=green \-viewport coronal
+
+freeview -v /usr/local/home/rReslice_Combined_roi_meanRD.nii \ rReslice_Combined_roi_meanRD.nii:reg=register.lta -f \ SUBJECTS_DIR/fsaverage/surf/lh.white:edgecolor=green \ SUBJECTS_DIR/fsaverage/surf/rh.white:edgecolor=green \-viewport coronal
+
+freeview -v rReslice_Combined_roi_meanRD.nii \ 
+
+mri_vol2surf --src rReslice_Combined_roi_meanRD.nii --out_type analyze --srcreg register.dat --hemi hemisphere --o ./sig-rh.nii --out_type analyze --float2int round --trgsubject ico --icoorder 7
+
+mri_vol2surf --src rReslice_Combined_roi_meanRD.nii --src_type analyze --srcreg register.dat --hemi rh --o ./sig-rh.img --out_type analyze --float2int round --trgsubject ico --icoorder 7
+
+mri_vol2surf --src rReslice_Combined_roi_meanRD.nii --out mean.nii --srcreg register.dat --hemi rh
+
+mri_vol2surf --src rReslice_Combined_roi_meanRD.nii --regheader MNI --projfrac 0.5 --hemi lh --out /usr/local/freesurfer/7.2.0/subjects/fsaverage
+
+mri_vol2surf --src rReslice_Combined_roi_meanRD.nii --out rReslice_Combined_roi_meanRD_surf.nii --hemi lhrh --out_type nii --regheader 
+
+mri_vol2surf --src rReslice_Combined_roi_meanRD.nii --out rReslice_Combined_roi_meanRD_surf.nii --hemi lhrh --out_type nii --regheader /usr/home/register.dat
+
+recon-all -s surfanatomical -i /home/developer/template/template_RW.nii -all 
+
+
+mri_vol2surf --src rReslice_Combined_roi_meanRD.nii --regheader /home/developer/template/template_RW.nii --projfrac 0.5 --hemi lhrh --out /home/developer/
+
+
+freeview -f $SUBJECTS_DIR/$subject/surf/lh.inflated:overlay=lesionMask_surf.mgh
+
+freeview -f $SUBJECTS_DIR/$subject/surf/lh.inflated:overlay=lesionMask_surf.mgh
+
+
+Bias mapping code - edit line 14 with volume file
+Find file aal MNI V4 for all the brain region numbers - if cannot find brain region in this atlas, use another atlas- raymond had to combine overlays from different atlases
+
+Look through all the text files to see if the brain regions I need are there! 
+
+Swap out Raymond's mean values with my frequency information
+
+May need to normalize data so the value is between 0 and 1 - try first with count number, then normalize it - convert from max and min
+
+
+line 84 combines all the regions - just add + sign to include more regions 
+disregard 97 to 104
+
+change lines 14, 20
+
+mri_vol2surf --src rReslice_Combined_roi_meanRD.nii --src_type nii --regheader mni152surfanatomical --hemi lhrh --projfrac-avg 0.5 --o ./template --out_type nii
+
+mri_vol2surf --src rReslice_Combined_roi_meanRD.nii --src_type nii --srcreg template_RW.nii --hemi lhrh --projfrac-avg 0.5 --out /home/developer/template/final.nii --out_type nii
+
+
+mri_vol2surf --mov rReslice_Combined_roi_meanRD.nii --mni152reg --trgsubject fsaverage --hemi lh --out final.nii --projfrac-max 0 1 .1
+
+mri_vol2surf --src rReslice_Combined_roi_meanRD.nii --out final.nii --mni152reg --trgsubject fsaverage --hemi lh
+
+
+
+How to fix it when ubuntu crashes: https://askubuntu.com/questions/1408595/kernel-panic-in-virtual-box-6-1-32
+
+
+mri_vol2surf --src rReslice_Combined_roi_meanRD.nii --src_type nii --regheader mni152surfanatomical --hemi lhrh --projfrac-avg 0.5 --o ./pls --out_type nii
+
+mri_vol2surf --src rReslice_Combined_roi_meanRD.nii --out lh.cope2.mgh \ --regheader mni152 --hemi lhrh --projfrac-avg 0.5
